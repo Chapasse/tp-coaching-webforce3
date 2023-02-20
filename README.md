@@ -55,3 +55,29 @@ exercice 4
 configuration déjà réalisée
 
 exercice 5
+
+création du fichier blogs + affectation des droits
+- touch blogs.py | sudo chmod +777 blogs.py
+ouverture puis on colle le texte à l'intérieur
+- nano blogs.py
+![Alt text](screen-file-blogs.png)
+ajouter une variable d'environnement pour le bon fonctionnement
+- cd /home/tp-coaching-webforce3
+- export FLASK_APP=blogs.py
+configurer de manière permanente
+- nano / home/ubuntu/.bashrc
+    - export FLASK_APP=blogs.py
+mettre en marche la modification
+- source /home/ubuntu/.bashrc
+ajuster les permissions du répertoire log pour que Flask puisse s'y exécuter
+- sudo chmod 777 log
+Lancer l'application Flask
+- flask run --host=0.0.0.0 -p 30101
+Depuis un navigateur, ouvrir l'url 
+- http://<ip_de_votre_vm>:30101/blogs.
+Verifier que le fichier record.log existe
+- cd /home/tp-coaching-webforce3/log
+- ls
+
+
+exercice 6
