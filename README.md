@@ -43,11 +43,17 @@ exercice 3
 rechercher le disque dur connecté
 
 - sudo fdisk -l | grep "1 GiB"
-  formater le disque
+
+formater le disque
+
 - sudo mkfs -t ext4 /dev/vdc
-  créer un point de montage
+
+créer un point de montage
+
 - sudo mkdir /home/tp-coaching-webforce3/log
-  monter le disque sur le point de montage
+
+monter le disque sur le point de montage
+
 - sudo mount /dev/vdc /home/tp-coaching-webforce3/log
 
 exercice 4
@@ -100,25 +106,37 @@ exercice 6
 on vérifie la présence des firewall de base de linux (ici ufw qui est le plus simple à utiliser)
 
 - ufw --version
-  on voit qu'il est bine installé on check ensuite son status
+
+on voit qu'il est bine installé on check ensuite son status
+
 - sudo ufw status
-  On autorise le SSH en entrée pour ne pas perdre l'accès à la VM puis on autorise le port 30101 et fermer le 5000
+
+On autorise le SSH en entrée pour ne pas perdre l'accès à la VM puis on autorise le port 30101 et fermer le 5000
+
 - sudo ufw allow ssh
 - sudo ufw allow 30101
 - sudo ufw deny 5000
-  on rend actif ces règles
+
+on rend actif ces règles
+
 - sudo ufw enable
 
 Lancer l'application Flask sur le port 30101
 
 - flask run --host=0.0.0.0 -p 30101
-  Depuis un navigateur, ouvrir l'url
+
+Depuis un navigateur, ouvrir l'url
+
 - http://<ip_de_votre_vm>:30101/blogs.
-  on constate que l'on a toujours accès
+
+on constate que l'on a toujours accès
 
 Lancer l'application Flask sur le port 5000
 
 - flask run --host=0.0.0.0 -p 5000
-  Depuis un navigateur, ouvrir l'url
+
+Depuis un navigateur, ouvrir l'url
+
 - http://<ip_de_votre_vm>:5000/blogs.
-  on constate que le site ne se charge pas et que l'on obtient un timeout
+
+on constate que le site ne se charge pas et que l'on obtient un timeout
