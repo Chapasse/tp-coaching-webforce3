@@ -57,27 +57,52 @@ configuration déjà réalisée
 exercice 5
 
 création du fichier blogs + affectation des droits
+
 - touch blogs.py | sudo chmod +777 blogs.py
-ouverture puis on colle le texte à l'intérieur
+  ouverture puis on colle le texte à l'intérieur
 - nano blogs.py
-![Alt text](screen-file-blogs.png)
-ajouter une variable d'environnement pour le bon fonctionnement
+  ![Alt text](screen-file-blogs.png)
+  ajouter une variable d'environnement pour le bon fonctionnement
 - cd /home/tp-coaching-webforce3
 - export FLASK_APP=blogs.py
-configurer de manière permanente
-- nano / home/ubuntu/.bashrc
-    - export FLASK_APP=blogs.py
-mettre en marche la modification
+  configurer de manière permanente
+- nano / home/ubuntu/.bashrc - export FLASK_APP=blogs.py
+  mettre en marche la modification
 - source /home/ubuntu/.bashrc
-ajuster les permissions du répertoire log pour que Flask puisse s'y exécuter
+  ajuster les permissions du répertoire log pour que Flask puisse s'y exécuter
 - sudo chmod 777 log
-Lancer l'application Flask
+  Lancer l'application Flask
 - flask run --host=0.0.0.0 -p 30101
-Depuis un navigateur, ouvrir l'url 
+  Depuis un navigateur, ouvrir l'url
 - http://<ip_de_votre_vm>:30101/blogs.
-Verifier que le fichier record.log existe
+  Verifier que le fichier record.log existe
 - cd /home/tp-coaching-webforce3/log
 - ls
 
-
 exercice 6
+
+on vérifie la présence des firewall de base de linux (ici ufw qui est le plus simple à utiliser)
+
+- ufw --version
+  on voit qu'il est bine installé on check ensuite son status
+- sudo ufw status
+  On autorise le SSH en entrée pour ne pas perdre l'accès à la VM puis on autorise le port 30101 et fermer le 5000
+- sudo ufw allow ssh
+- sudo ufw allow 30101
+- sudo ufw deny 5000
+  on rend actif ces règles
+- sudo ufw enable
+
+Lancer l'application Flask sur le port 30101
+
+- flask run --host=0.0.0.0 -p 30101
+  Depuis un navigateur, ouvrir l'url
+- http://<ip_de_votre_vm>:30101/blogs.
+  on constate que l'on a toujours accès
+
+Lancer l'application Flask sur le port 5000
+
+- flask run --host=0.0.0.0 -p 5000
+  Depuis un navigateur, ouvrir l'url
+- http://<ip_de_votre_vm>:5000/blogs.
+  on constate que le site ne se charge pas et que l'on obtient un timeout
