@@ -85,6 +85,7 @@ Vérifier l'application Web sur ces ports
 
 ---
 
+<<<<<<< HEAD
 # TP Ansible
 Ecrire vos commandes dans le fichier README.md avec commentaires + explications.   
 Certaines lignes commencant par *- doivent etre traduites par une ou plusiers commandes linux ou ansible.
@@ -92,6 +93,15 @@ Certaines lignes commencant par *- doivent etre traduites par une ou plusiers co
 ## Installation avec virtualenv
 Mettre en place ansible dans votre VM, si ce n'est pas deja fait
 Nous allons créer un virtualenv python pour installer la derniere version
+=======
+# TP Ansible 
+Ecrire vos commandes dans le fichier README.md avec commentaires + explications.   
+Certaines lignes commencant par *- doivent etre traduites par une ou plusiers commandes linux ou ansible.   
+
+## Installation avec virtualenv 
+Mettre en place ansible dans votre VM, si ce n'est pas deja fait
+Nous allons créer un virtualenv python pour installer la derniere version 
+>>>>>>> 4c26762b1485ec74ee6b733aa1d473efac8f2833
 d'Ansible
 ```shell
 cd ~/tp-coaching-webforce3
@@ -111,10 +121,12 @@ Créer un fichier ansible-1.yaml qui automatise l'exercice 2 ci-dessus.
 2. Vérifier la version de python3
 3. Créer un alias dans ~/.bashrc
 4. installer le package pip
+
    Testez votre script, il doit etre idempotent
 
 ## TP ansible 2
 Dans une sous directory de votre projet tp-coaching-webforce3 nommée **ansible**
+=======
 
 Trouvez le fichier ansible-2-filtre.yml qui affiche les devices en mode raw
 1. Analysez le fichier ansible-2-filtre.yml
@@ -131,7 +143,9 @@ Une maniere qui cette fois fonctionne en remote est le script ansible-2.yml
 
 ## TP ansible 3
 Dans une sous directory de votre projet tp-coaching-webforce3 nommée **ansible**   
+<<<<<<< HEAD
 *- Créer un fichier ansible-3.yaml qui automatise l'exercice 6 ci-dessus.
+
 1. activer le firewall d'ubuntu
 2. fermer le port 5000
 3. ouvrir le port 30101  
@@ -198,6 +212,176 @@ dans la directory tasks copiez le code suivant dans setup-AlmaLinux.yml
   yum:
     name: "{{ postgresql_packages }}"
     state: present
+```
+
+## TP ansible 4  inclus maintenant un container almalinux
+### Mise en place du container almalinux
+Allez dans la directory almalinux et suivre les instructions du fichier README.md
+creez le container portainer 
+```shell
+docker run -d --name portainer -p 30001:9000 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer -H unix:///var/run/docker.sock
+# il faut se logger rapidement autrement vous aurez un timeout
+```
+Dans votre navigateur, ouvrir portainer et dans la console du container alma entrer un password pour le user root
+dans portainer notez l'adresse ip du container alma
+Dans votre machine docker-x , faire 
+```shell
+ssh root@adresse_ip_du_container
+```
+entrez le mot de passe
+*- Creez une cle ssh sur la vm docker-x
+*- Copiez votre cle ssh dans le container avec ssh-copy-id        
+*- Creer votre fichier inventory pour acceder depuis ansible vers ce container. 
+Le fichier inventory contient le groupe alma qui contient un container comme ci-dessous
+```shell
+[alma]
+alma01 ansible_host=172.xx.x.x ansible_ssh_user=root ansible_ssh_private_key=/home/<surname>/.ssh/id_rsa
+```
+*- Faire la commande ansible Ad-hoc pour verifier la connectivite.      
+Dans votre home directory creez une directory webforce.   
+*- Dans cette directory , creer un role postgresql.role   
+*- Dans la directory webforce , creer un playbook postgres.yml qui utilise le role  
+*- faire les commandes ansible Ad-hoc pour verifier l'OS et la version almalinux  
+Dans role postgresql.role  et dans la directory tasks  
+Creez un fichier nommee variables.yml , Copiez le code suivant:  
+```yaml
+---
+# Variables configuration
+- name: Include OS-specific variables (Alma)
+  include_vars: "{{ ansible_distribution }}-{{ ansible_distribution_version.split('.')[0] }}.yml"
+  when: ansible_distribution == "AlmaLinux"
+```
+Etudiez ce code, et commentez le dans votre README.md
+Editez le fichier main.yml dans la directory tasks du role postgresql.role
+Copiez le code suivant:
+```yaml
+- include_tasks: variables.yml
+
+# Setup /install task
+- include_tasks: setup-AlmaLinux.yml
+  when: ansible_distribution == 'AlmaLinux'
+
+- include_tasks: initialize.yml
+  
+- import_tasks: users.yml
+```
+dans la directory tasks copiez le code suivant dans setup-AlmaLinux.yml 
+```yaml
+---
+- name: Install RPM repo
+  command: dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+- name: Check if the postgresql packages are installed
+  yum:
+    name: "{{ postgresql_packages }}"
+    state: present
+
+
+```
+dans la directory tasks copiez le code dans initialize.yml
+```yaml
+---
+- name: Set Postgresql environment variables
+  template:
+    src: postgres.sh.j2
+    dest: /etc/profile.d/postgres.sh
+    mode: 0644
+
+- name: Check if Postgresql directory exists
+  file:
+    path: "{{ postgresql_data_dir }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    state: directory
+    mode: 0700
+
+- name: Check if Postgresql database is initialized
+  stat:
+    path: "{{ postgresql_data_dir }}/PG_VERSION"
+  register: pgdata_dir_version
+  tags:
+    - db_init
+
+- name: Ensure PostgreSQL database is initialized
+  command: "{{ postgresql_bin_path }}/initdb -D {{ postgresql_data_dir }}"
+  when: not pgdata_dir_version.stat.exists
+  become: true
+  become_user: "{{ postgresql_user }}"
+```
+
+dans la directory tasks copiez le code dans users.yml
+```yaml
+---
+- name: Ensure Postgresql users are present
+  postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    encrypted: "{{ item.encrypted | default(omit) }}"
+    priv: "{{ item.priv | default(omit) }}"
+    role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
+    db: "{{ item.db | default(omit) }}"
+    login_host: "{{ item.login_host | default(omit) }}"
+    login_password: "{{ item.login_password | default(omit) }}"
+    login_user: "{{item.login_user | default(omit) }}"
+    port: "{{item.port | default(omit) }}"
+    state: "{{ item.state | default(omit) }}"
+  with_items: "{{ postgresql_users }}"
+  #no_log: "{{ postgresql__users_no_log }}"
+  become: true
+  become_user: "{{ postgresql_user}}"
+```
+
+Le fichier qui mixte le nom de l'OS et la version est Almalinux-8.yml
+```yaml
+---
+postgresql_version: "10"
+postgresql_data_dir: "/var/lib/pgsql/data"
+postgresql_bin_path: "/usr/bin"
+postgresql_config_path: "/var/lib/pgsql/data"
+postgresql_daemon: postgresql
+postgresql_packages:
+  - postgresql
+  - postgresql-server
+  - postgresql-contrib
+```
+dans le fichier main.yml postgresql.role/handlers
+```yaml
+- name: restart postgresql
+  service:
+    name: "{{ postgresql_daemon}}"
+    state: "{{ postgresql_restarted_state }}"
+    sleep: 5
+```
+Pourquoi avez vous besoin d'un handler?   
+
+dans le fichier main.yml postgresql.role/defaults
+```yaml
+postgresql_enablerepo: ""
+
+postgresql_restarted_state: "restarted"
+
+postgresql_user: postgres
+postgresql_group: postgres
+
+postgresql_service_state: started
+postgresql_service_enabled: true
+
+postgresql_users_no_log: true
+
+postgresql_users: []
+```
+dans le fichier postgres.sh.j2 postgresql.role/templates
+```shell
+export PGDATA={{ postgresql_data_dir }}
+export PATH=$PATH:{{ postgresql_bin_path }}
+```
+
+
+
+
+
+
+
 
 
 ```
